@@ -3,6 +3,7 @@ let MAIN;
 let MODAL_POST;
 let BTN_SHOW_POST;
 let BTN_CANCEL_POST;
+let deferredPrompt;
 
 
 // Funciones
@@ -24,6 +25,15 @@ const closePostModal = () => {
     MODAL_POST.style.transform = 'translateY(100vh)';
 };
 
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    console.log('pantalla anulada')
+    e.preventDefault();
+    deferredPrompt = e;
+
+
+});
+
 window.addEventListener('load', async() => {
     MAIN = document.querySelector('#main');
     MODAL_POST = document.querySelector('#modal-post-section');
@@ -35,14 +45,20 @@ window.addEventListener('load', async() => {
 
 
     if ('serviceWorker' in navigator) {
-        if (navigator.serviceWorker) {
-            const response = await navigator.serviceWorker.register('sw.js');
-            if (response) {
-                console.info('service worker registrado');
-            }
 
+        const response = await navigator.serviceWorker.register('sw.js');
+        if (response) {
+            console.info('service worker registrado');
         }
     }
-
-
+    const bannerInstall = document.querySelector('#banner-install');
+    bannerInstall.addEventListener('click', async() => {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const response = await deferredPrompt.userChoice;
+            if (response.outcome === 'dismissed') {
+                console.error('Elusuario cancelo la instalación')
+            }
+        }
+    });
 });
